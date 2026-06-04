@@ -387,6 +387,48 @@ def observables_from_states(states: np.ndarray):
     return pe, pg, mean_n, field_dist
 
 
+def bloch_vectors(states: np.ndarray):
+    rho_ge = np.sum(states[:, :, 0] * np.conj(states[:, :, 1]), axis=1)
+    bx = 2.0 * np.real(rho_ge)
+    by = 2.0 * np.imag(rho_ge)
+    bz = np.sum(np.abs(states[:, :, 1]) ** 2 - np.abs(states[:, :, 0]) ** 2, axis=1)
+    return bx, by, bz
+
+
+def bloch_copy():
+    if st.session_state.app_lang == "cs":
+        return {
+            "title": "Blochova koule atomového stavu",
+            "body": r"""
+Tato vizualizace ukazuje **redukovaný stav dvouhladinového atomu** ve formě bodu na Blochově kouli.
+
+- severní pól $z=+1$ odpovídá stavu $|e\rangle$,
+- jižní pól $z=-1$ odpovídá stavu $|g\rangle$,
+- body na povrchu představují **čisté stavy**,
+- body uvnitř koule představují **smíšené stavy**.
+
+V Jaynesově–Cummingsově dynamice se atom typicky **proplétá** s polem. Proto se redukovaný atomový stav často pohybuje **dovnitř koule**, ne jen po jejím povrchu.
+
+Matematicky jde o stejnou geometrii jako u **Poincarého koule** pro polarizaci, ale zde je přirozeným názvem **Blochova koule**.
+""",
+        }
+    return {
+        "title": "Bloch sphere of the atomic state",
+        "body": r"""
+This visualization shows the **reduced state of the two-level atom** as a point inside the Bloch sphere.
+
+- the north pole $z=+1$ corresponds to $|e\rangle$,
+- the south pole $z=-1$ corresponds to $|g\rangle$,
+- points on the surface represent **pure states**,
+- points inside the sphere represent **mixed states**.
+
+In Jaynes–Cummings dynamics the atom generally becomes **entangled** with the field. That is why the reduced atomic state often moves **inside the sphere**, not only on its surface.
+
+Mathematically this is the same geometry as the **Poincaré sphere** for polarization, but for a two-level atom the standard name is the **Bloch sphere**.
+""",
+    }
+
+
 def animated_jc_figure(times, pe, pg, mean_n, field_dist):
     max_n = field_dist.shape[1] - 1
     n = np.arange(max_n + 1)
@@ -464,6 +506,121 @@ def animated_marker_figure(times, y, y_label):
                 ],
                 x=0.02,
                 y=1.08,
+            )
+        ],
+    )
+    return fig
+
+
+
+
+def animated_bloch_sphere(times, bx, by, bz):
+    u = np.linspace(0.0, 2.0 * np.pi, 50)
+    v = np.linspace(0.0, np.pi, 26)
+    xs = np.outer(np.cos(u), np.sin(v))
+    ys = np.outer(np.sin(u), np.sin(v))
+    zs = np.outer(np.ones_like(u), np.cos(v))
+
+    th = np.linspace(0.0, 2.0 * np.pi, 300)
+    circle_xy = (np.cos(th), np.sin(th), np.zeros_like(th))
+    circle_xz = (np.cos(th), np.zeros_like(th), np.sin(th))
+    circle_yz = (np.zeros_like(th), np.cos(th), np.sin(th))
+
+    fig = go.Figure()
+    fig.add_trace(
+        go.Surface(
+            x=xs, y=ys, z=zs,
+            opacity=0.14,
+            showscale=False,
+            colorscale=[[0.0, "#9ecae1"], [1.0, "#9ecae1"]],
+            hoverinfo="skip",
+            name=""
+        )
+    )
+    for cx, cy, cz in (circle_xy, circle_xz, circle_yz):
+        fig.add_trace(
+            go.Scatter3d(
+                x=cx, y=cy, z=cz,
+                mode="lines",
+                line=dict(color="rgba(120,120,120,0.55)", width=3),
+                showlegend=False,
+                hoverinfo="skip",
+            )
+        )
+    fig.add_trace(
+        go.Scatter3d(
+            x=bx, y=by, z=bz,
+            mode="lines",
+            line=dict(color="rgba(80,80,80,0.28)", width=4),
+            showlegend=False,
+            hoverinfo="skip",
+        )
+    )
+    fig.add_trace(
+        go.Scatter3d(
+            x=bx[:1], y=by[:1], z=bz[:1],
+            mode="lines",
+            line=dict(color="#1f77b4", width=6),
+            name="trajectory",
+            showlegend=False,
+            hoverinfo="skip",
+        )
+    )
+    fig.add_trace(
+        go.Scatter3d(
+            x=[bx[0]], y=[by[0]], z=[bz[0]],
+            mode="markers",
+            marker=dict(size=6, color="#d62728"),
+            showlegend=False,
+            hoverinfo="skip",
+        )
+    )
+    fig.add_trace(
+        go.Scatter3d(
+            x=[0, 0], y=[0, 0], z=[-1, 1],
+            mode="markers+text",
+            marker=dict(size=3, color=["#444444", "#444444"]),
+            text=["|g⟩", "|e⟩"],
+            textposition="middle right",
+            showlegend=False,
+            hoverinfo="skip",
+        )
+    )
+
+    frames = []
+    for k in range(len(times)):
+        frames.append(
+            go.Frame(
+                data=[
+                    go.Scatter3d(x=bx[: k + 1], y=by[: k + 1], z=bz[: k + 1]),
+                    go.Scatter3d(x=[bx[k]], y=[by[k]], z=[bz[k]]),
+                ],
+                traces=[5, 6],
+                name=str(k),
+            )
+        )
+    fig.frames = frames
+
+    fig.update_layout(
+        height=620,
+        margin=dict(l=10, r=10, t=30, b=10),
+        scene=dict(
+            xaxis=dict(range=[-1.1, 1.1], title="x", showbackground=False, showgrid=False, zeroline=False),
+            yaxis=dict(range=[-1.1, 1.1], title="y", showbackground=False, showgrid=False, zeroline=False),
+            zaxis=dict(range=[-1.1, 1.1], title="z", showbackground=False, showgrid=False, zeroline=False),
+            aspectmode="cube",
+            camera=dict(eye=dict(x=1.55, y=1.45, z=1.15)),
+        ),
+        updatemenus=[
+            dict(
+                type="buttons",
+                showactive=False,
+                buttons=[
+                    dict(label="Play", method="animate", args=[None, {"frame": {"duration": 90, "redraw": True}, "fromcurrent": True}]),
+                    dict(label="Pause", method="animate", args=[[None], {"frame": {"duration": 0, "redraw": False}, "mode": "immediate"}]),
+                ],
+                x=0.02,
+                y=1.03,
             )
         ],
     )
@@ -575,6 +732,12 @@ def main():
 
         st.plotly_chart(animated_jc_figure(times, pe, pg, mean_n, field_dist), use_container_width=True)
 
+        bloch_text = bloch_copy()
+        with st.expander(bloch_text["title"], expanded=False):
+            st.markdown(bloch_text["body"])
+        bx, by, bz = bloch_vectors(states)
+        st.plotly_chart(animated_bloch_sphere(times, bx, by, bz), use_container_width=True)
+
     with tabs[2]:
         with st.expander(tr("help_vacuum"), expanded=False):
             st.markdown(tr("help_vacuum_body"))
@@ -610,6 +773,12 @@ def main():
 
         st.plotly_chart(animated_jc_figure(times, pe, pg, mean_n, field_dist), use_container_width=True)
 
+        bloch_text = bloch_copy()
+        with st.expander(bloch_text["title"], expanded=False):
+            st.markdown(bloch_text["body"])
+        bx, by, bz = bloch_vectors(states)
+        st.plotly_chart(animated_bloch_sphere(times, bx, by, bz), use_container_width=True)
+
     with tabs[3]:
         with st.expander(tr("help_revival"), expanded=False):
             st.markdown(tr("help_revival_body"))
@@ -644,6 +813,12 @@ def main():
             st.plotly_chart(fig2, use_container_width=True)
 
         st.plotly_chart(animated_marker_figure(times, pe, tr("excited_pop")), use_container_width=True)
+
+        bloch_text = bloch_copy()
+        with st.expander(bloch_text["title"], expanded=False):
+            st.markdown(bloch_text["body"])
+        bx, by, bz = bloch_vectors(states)
+        st.plotly_chart(animated_bloch_sphere(times, bx, by, bz), use_container_width=True)
 
     with tabs[4]:
         with st.expander(tr("help_detuning"), expanded=False):
