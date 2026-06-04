@@ -2,7 +2,7 @@ import math
 import numpy as np
 import plotly.graph_objects as go
 import streamlit as st
-from scipy.linalg import eigh
+from scipy.linalg import eig, eigh
 
 st.set_page_config(page_title="Quantum Electrodynamics Explorer", layout="wide")
 
@@ -53,7 +53,7 @@ This app is intentionally a **minimal closed-system model**. It uses:
 - a truncated photon basis for numerics,
 - dimensionless units with $\hbar=1$ and $\omega_c=1$.
 
-That makes the central physics transparent, but it also means this is **not** a full relativistic QED calculation. There is no spontaneous emission into free space, no cavity loss, no driving field, no multimode continuum, and no renormalization. The goal is clarity: to isolate the clean coherent structures that make cavity-QED dynamics so useful and so conceptually rich [3–6].
+That makes the central physics transparent, but it also means this is **not** a full relativistic QED calculation. The first panels deliberately isolate the coherent, nearly textbook Jaynes–Cummings limit. The final open-system panel then adds a simple **Lindblad master-equation** description of cavity loss, atomic relaxation, and dephasing, which is the standard next step when one wants to connect ideal cavity-QED motion to laboratory reality [8–10]. Even that extension is still intentionally minimal: there is no multimode continuum, no external driving, no ultrastrong-coupling physics, and no renormalization. The goal is clarity: to isolate the clean coherent structures first and then show how dissipation reshapes them [3–10].
 
 ### Selected references
 
@@ -63,12 +63,19 @@ That makes the central physics transparent, but it also means this is **not** a 
 [4] C. C. Gerry and P. L. Knight, *Introductory Quantum Optics*, 2nd ed. (Cambridge University Press, 2023).  
 [5] J.-M. Raimond, M. Brune, and S. Haroche, *Manipulating quantum entanglement with atoms and photons in a cavity*, Rev. Mod. Phys. **73**, 565–582 (2001).  
 [6] S. Haroche, *Controlling photons in a box and exploring the quantum to classical boundary*, Rev. Mod. Phys. **85**, 1083–1102 (2013).  
-[7] J. H. Eberly, N. B. Narozhny, and J. J. Sánchez-Mondragón, *Periodic spontaneous collapse and revival in a simple quantum model*, Phys. Rev. Lett. **44**, 1323–1326 (1980).
+[7] J. H. Eberly, N. B. Narozhny, and J. J. Sánchez-Mondragón, *Periodic spontaneous collapse and revival in a simple quantum model*, Phys. Rev. Lett. **44**, 1323–1326 (1980).  
+[8] H.-P. Breuer and F. Petruccione, *The Theory of Open Quantum Systems* (Oxford University Press, 2007).  
+[9] H. J. Carmichael, *Statistical Methods in Quantum Optics 1: Master Equations and Fokker–Planck Equations* (Springer, 1999).  
+[10] F. Campaioli, F. A. Pollock, and S. Vinjanampathy, *Quantum Master Equations: Tips and Tricks for Quantum Optics, Quantum Computing, and Beyond*, PRX Quantum **5**, 020202 (2024).  
+[8] H.-P. Breuer and F. Petruccione, *The Theory of Open Quantum Systems* (Oxford University Press, 2007).  
+[9] H. J. Carmichael, *Statistical Methods in Quantum Optics 1: Master Equations and Fokker–Planck Equations* (Springer, 1999).  
+[10] F. Campaioli, F. A. Pollock, and S. Vinjanampathy, *Quantum Master Equations: Tips and Tricks for Quantum Optics, Quantum Computing, and Beyond*, PRX Quantum **5**, 020202 (2024).
 """,
         "tab_light": "Quantized light",
         "tab_jc": "Atom–field dynamics",
         "tab_vacuum": "Vacuum Rabi",
         "tab_revival": "Collapse & revival",
+        "tab_open": "Open system: damping and decoherence",
         "tab_detuning": "Detuning",
         "help_light": "How to use this panel",
         "help_light_body": r"""
@@ -165,6 +172,36 @@ The line plot is useful for connecting the global map to one concrete time trace
 
 References: [1], [3]–[6].
 """,
+        "help_open": "How to use this panel",
+        "help_open_body": r"""
+This panel adds a simple **open-system extension** of the cavity-QED model. Instead of a pure state evolving only under the Hamiltonian, the system is described by a density matrix $\rho(t)$ obeying a Lindblad master equation [8–10].
+
+$$
+\dot\rho = -i[H,\rho] + \kappa\,\mathcal{D}[a]\rho + \gamma\,\mathcal{D}[\sigma_-]\rho + \gamma_\phi\,\mathcal{D}[\sigma_z]\rho,
+$$
+
+with $\mathcal{D}[L]\rho = L\rho L^\dagger - \tfrac12\{L^\dagger L,\rho\}$.
+
+### What the controls do
+- **Maximum photon number** sets the cavity-basis truncation.
+- **Coupling** and **detuning** play the same role as in the closed Jaynes–Cummings panels.
+- **Cavity loss** controls photon leakage from the cavity mode.
+- **Atomic decay** transfers population from $|e\rangle$ to $|g\rangle$.
+- **Pure dephasing** suppresses coherence without directly changing the atomic populations.
+- **Maximum time** and **Animation frames** control the time window and temporal sampling.
+
+### What each graph shows
+- **Left line plot:** excited- and ground-state populations of the atom.
+- **Right line plot:** mean cavity photon number and total purity $\mathrm{Tr}(\rho^2)$.
+- **Animated multi-panel figure:** the same population and photon traces plus the instantaneous field photon-number distribution.
+- **Additional purity animation:** purity as a function of time with a moving marker.
+- **Bloch sphere panel:** the reduced atomic state as a trajectory inside the Bloch sphere.
+
+### How to interpret it
+In the closed model the motion is unitary and information stays inside the atom–field system. Here the environment extracts photons and coherence, so oscillations are damped, purity drops, and the Bloch-vector trajectory contracts toward the interior. Cavity loss mostly removes field excitation, atomic decay empties $|e\rangle$, and dephasing primarily kills off-diagonal coherence. Comparing this panel with the closed vacuum-Rabi and collapse–revival panels is the cleanest way to see what is lost when the environment is no longer negligible [8–10].
+
+References: [5], [8]–[10].
+""",
         "reset": "Reset section",
         "nmax": "Maximum photon number",
         "state_type": "Field state",
@@ -190,12 +227,16 @@ References: [1], [3]–[6].
         "excited_pop": "Excited population",
         "ground_pop": "Ground population",
         "mean_photons": "Mean photons",
+        "cavity_loss": "Cavity loss κ / ωc",
+        "atomic_decay": "Atomic decay γ / ωc",
+        "dephasing": "Pure dephasing γφ / ωc",
+        "purity": "Purity Tr(ρ²)",
         "inst_field_dist": "Instantaneous field photon distribution",
         "selected_detuning": "Selected detuning cut",
         "detuning_range": "Maximum |Δ| / ωc for scan",
         "vacuum_note": "Initial state fixed to $|e,0\\rangle$.",
         "realizations_note": "All calculations use dimensionless units with $\\hbar = 1$ and $\\omega_c = 1$. The photon basis is truncated at the chosen maximum photon number.",
-        "footer": "Model scope: closed single-mode cavity-QED dynamics in the Jaynes–Cummings model with vectorized NumPy/SciPy diagonalization. See the reference list in the theory section for the physical background.",
+        "footer": "Model scope: single-mode cavity-QED dynamics in Jaynes–Cummings form, with both closed-system unitary evolution and a minimal open-system Lindblad extension, implemented with vectorized NumPy/SciPy linear algebra. See the theory section for scope and references.",
     },
     "cs": {
         "app_title": "Průzkumník kvantové elektrodynamiky",
@@ -242,7 +283,7 @@ Aplikace je záměrně postavena jako **minimální uzavřený model**. Použív
 - ořezanou bázi počtu fotonů pro numeriku,
 - bezrozměrné jednotky s $\hbar=1$ a $\omega_c=1$.
 
-To zpřehledňuje základní fyziku, ale zároveň to znamená, že nejde o **plný relativistický výpočet QED**. Chybí spontánní emise do volného prostoru, ztráty v dutině, buzení vnějším polem, multimódové kontinuum i renormalizace. Smyslem je přehlednost: izolovat koherentní struktury, které dělají dynamiku cavity QED tak užitečnou i konceptuálně silnou [3–6].
+To zpřehledňuje základní fyziku, ale zároveň to znamená, že nejde o **plný relativistický výpočet QED**. První panely záměrně izolují koherentní, téměř učebnicový Jaynesův–Cummingsův limit. Závěrečný panel s otevřeným systémem pak přidává jednoduchý popis pomocí **Lindbladovy master equation** pro ztráty v dutině, relaxaci atomu a dephasing, což je standardní další krok při přechodu od ideální cavity QED k laboratorně realističtějšímu popisu [8–10]. I toto rozšíření je ale pořád záměrně minimální: chybí multimódové kontinuum, vnější buzení, ultrasilná vazba i renormalizace. Smyslem je nejprve izolovat čisté koherentní struktury a pak ukázat, jak je disipace přetváří [3–10].
 
 ### Vybrané reference
 
@@ -252,12 +293,16 @@ To zpřehledňuje základní fyziku, ale zároveň to znamená, že nejde o **pl
 [4] C. C. Gerry and P. L. Knight, *Introductory Quantum Optics*, 2nd ed. (Cambridge University Press, 2023).  
 [5] J.-M. Raimond, M. Brune, and S. Haroche, *Manipulating quantum entanglement with atoms and photons in a cavity*, Rev. Mod. Phys. **73**, 565–582 (2001).  
 [6] S. Haroche, *Controlling photons in a box and exploring the quantum to classical boundary*, Rev. Mod. Phys. **85**, 1083–1102 (2013).  
-[7] J. H. Eberly, N. B. Narozhny, and J. J. Sánchez-Mondragón, *Periodic spontaneous collapse and revival in a simple quantum model*, Phys. Rev. Lett. **44**, 1323–1326 (1980).
+[7] J. H. Eberly, N. B. Narozhny, and J. J. Sánchez-Mondragón, *Periodic spontaneous collapse and revival in a simple quantum model*, Phys. Rev. Lett. **44**, 1323–1326 (1980).  
+[8] H.-P. Breuer and F. Petruccione, *The Theory of Open Quantum Systems* (Oxford University Press, 2007).  
+[9] H. J. Carmichael, *Statistical Methods in Quantum Optics 1: Master Equations and Fokker–Planck Equations* (Springer, 1999).  
+[10] F. Campaioli, F. A. Pollock, and S. Vinjanampathy, *Quantum Master Equations: Tips and Tricks for Quantum Optics, Quantum Computing, and Beyond*, PRX Quantum **5**, 020202 (2024).
 """,
         "tab_light": "Kvantované světlo",
         "tab_jc": "Dynamika atom–pole",
         "tab_vacuum": "Vakuové Rabiho oscilace",
         "tab_revival": "Kolaps a revival",
+        "tab_open": "Otevřený systém: tlumení a dekoherence",
         "tab_detuning": "Detuning",
         "help_light": "Jak tento panel používat",
         "help_light_body": r"""
@@ -354,6 +399,36 @@ Blízko $\Delta=0$ jsou atom a dutina na rezonanci a vyměňují si excitaci nej
 
 Reference: [1], [3]–[6].
 """,
+        "help_open": "Jak tento panel používat",
+        "help_open_body": r"""
+Tento panel přidává jednoduché **rozšíření na otevřený systém**. Místo čistého stavu, který se vyvíjí jen podle Hamiltoniánu, je systém popsán hustotní maticí $\rho(t)$ splňující Lindbladovu master equation [8–10].
+
+$$
+\dot\rho = -i[H,\rho] + \kappa\,\mathcal{D}[a]\rho + \gamma\,\mathcal{D}[\sigma_-]\rho + \gamma_\phi\,\mathcal{D}[\sigma_z]\rho,
+$$
+
+kde $\mathcal{D}[L]\rho = L\rho L^\dagger - \tfrac12\{L^\dagger L,\rho\}$.
+
+### Co dělají ovladače
+- **Maximum photon number** určuje ořez báze dutinového módu.
+- **Coupling** a **Detuning** mají stejný význam jako v uzavřených Jaynesových–Cummingsových panelech.
+- **Cavity loss** řídí únik fotonů z dutiny.
+- **Atomic decay** převádí populaci z $|e\rangle$ do $|g\rangle$.
+- **Pure dephasing** tlumí koherenci, aniž by přímo měnil atomové populace.
+- **Maximum time** a **Animation frames** určují časové okno a časové vzorkování.
+
+### Co ukazuje každý graf
+- **Levý line plot:** populace excitovaného a základního stavu atomu.
+- **Pravý line plot:** střední počet fotonů v dutině a celková čistota $\mathrm{Tr}(\rho^2)$.
+- **Animated multi-panel figure:** stejné časové průběhy populací a počtu fotonů plus okamžité rozdělení počtu fotonů v poli.
+- **Dodatečná animace čistoty:** čistota jako funkce času s pohybujícím se markerem.
+- **Bloch sphere panel:** redukovaný stav atomu jako trajektorie uvnitř Blochovy koule.
+
+### Jak tomu rozumět
+V uzavřeném modelu je vývoj unitární a informace zůstává uvnitř systému atom–pole. Zde prostředí odvádí fotony i koherenci, takže oscilace se tlumí, čistota klesá a trajektorie Blochova vektoru se stahuje dovnitř koule. Cavity loss primárně odebírá excitaci z pole, atomic decay vybíjí stav $|e\rangle$ a dephasing hlavně ničí mimodiagonální koherenci. Porovnání tohoto panelu s uzavřenými vacuum-Rabi a collapse–revival panely nejlépe ukáže, co se ztratí, když prostředí už nelze zanedbat [8–10].
+
+Reference: [5], [8]–[10].
+""",
         "reset": "Reset sekce",
         "nmax": "Maximální počet fotonů",
         "state_type": "Stav pole",
@@ -379,12 +454,16 @@ Reference: [1], [3]–[6].
         "excited_pop": "Populace excitovaného stavu",
         "ground_pop": "Populace základního stavu",
         "mean_photons": "Střední počet fotonů",
+        "cavity_loss": "Ztráty dutiny κ / ωc",
+        "atomic_decay": "Atomový rozpad γ / ωc",
+        "dephasing": "Čistý dephasing γφ / ωc",
+        "purity": "Čistota Tr(ρ²)",
         "inst_field_dist": "Okamžité rozdělení počtu fotonů v poli",
         "selected_detuning": "Vybraný řez detuningem",
         "detuning_range": "Maximální |Δ| / ωc pro scan",
         "vacuum_note": "Počáteční stav je fixován na $|e,0\\rangle$.",
         "realizations_note": "Všechny výpočty používají bezrozměrné jednotky s $\\hbar = 1$ a $\\omega_c = 1$. Báze počtu fotonů je oříznuta na zvolený maximální počet fotonů.",
-        "footer": "Rozsah modelu: uzavřená jednómódová cavity-QED dynamika v Jaynesově–Cummingsově modelu s vektorizovanou diagonalizací v NumPy/SciPy. Fyzikální kontext a literaturu najdeš v teoretické části.",
+        "footer": "Rozsah modelu: jednómódová cavity-QED dynamika v Jaynesově–Cummingsově tvaru, a to jak pro uzavřený unitární vývoj, tak pro minimální otevřený Lindbladův model, implementovaná přes vektorizovanou lineární algebru NumPy/SciPy. Rozsah platnosti a reference jsou v teoretické části.",
     },
 }
 
@@ -393,6 +472,7 @@ DEFAULTS = {
     "jc": {"atom": "e", "n0": 2, "nmax": 12, "g": 0.08, "delta": 0.0, "tmax": 120.0, "frames": 48},
     "vacuum": {"nmax": 8, "g": 0.10, "delta": 0.0, "tmax": 120.0, "frames": 48},
     "revival": {"nmax": 30, "alpha": 4.0, "g": 0.05, "delta": 0.0, "tmax": 420.0, "frames": 64},
+    "open": {"nmax": 10, "g": 0.08, "delta": 0.0, "kappa": 0.015, "gamma": 0.008, "gamma_phi": 0.004, "tmax": 140.0, "frames": 56},
     "detuning": {"nmax": 10, "n0": 1, "g": 0.08, "dmax": 0.40, "tmax": 160.0, "ndelta": 61},
 }
 
@@ -502,6 +582,86 @@ def evolve_states(nmax: int, psi0: np.ndarray, g: float, delta: float, times: np
     phases = np.exp(-1j * np.outer(times, evals))
     states = (phases * coeffs[None, :]) @ evecs.T
     return states.reshape(len(times), nmax + 1, 2)
+
+
+
+
+@st.cache_resource
+def lindblad_eigendecomposition(nmax: int, g: float, delta: float, kappa: float, gamma: float, gamma_phi: float):
+    a, adag, num, ident_f = field_operators(nmax)
+    wc = 1.0
+    w0 = wc + delta
+    sigma_z = np.array([[-1, 0], [0, 1]], dtype=complex)
+    sigma_p = np.array([[0, 0], [1, 0]], dtype=complex)
+    sigma_m = np.array([[0, 1], [0, 0]], dtype=complex)
+    ident_a = np.eye(2, dtype=complex)
+
+    H = (
+        wc * np.kron(num, ident_a)
+        + 0.5 * w0 * np.kron(ident_f, sigma_z)
+        + g * (np.kron(adag, sigma_m) + np.kron(a, sigma_p))
+    )
+    dim = H.shape[0]
+    I = np.eye(dim, dtype=complex)
+    L = -1j * (np.kron(I, H) - np.kron(H.T, I))
+
+    collapse_ops = []
+    if kappa > 0:
+        collapse_ops.append(np.sqrt(kappa) * np.kron(a, ident_a))
+    if gamma > 0:
+        collapse_ops.append(np.sqrt(gamma) * np.kron(ident_f, sigma_m))
+    if gamma_phi > 0:
+        collapse_ops.append(np.sqrt(gamma_phi) * np.kron(ident_f, sigma_z))
+
+    for c in collapse_ops:
+        cdgc = c.conj().T @ c
+        L += np.kron(c.conj(), c)
+        L -= 0.5 * np.kron(I, cdgc)
+        L -= 0.5 * np.kron(cdgc.T, I)
+
+    evals, evecs = eig(L)
+    inv_evecs = np.linalg.inv(evecs)
+    return evals, evecs, inv_evecs
+
+
+@st.cache_data
+def evolve_density_matrices(nmax: int, rho0: np.ndarray, g: float, delta: float, kappa: float, gamma: float, gamma_phi: float, times: np.ndarray):
+    evals, evecs, inv_evecs = lindblad_eigendecomposition(nmax, float(g), float(delta), float(kappa), float(gamma), float(gamma_phi))
+    dim = rho0.shape[0]
+    rho0_vec = rho0.reshape(dim * dim, order="F")
+    coeffs = inv_evecs @ rho0_vec
+    phases = np.exp(np.outer(times, evals))
+    rho_vecs = (phases * coeffs[None, :]) @ evecs.T
+    rhos = rho_vecs.reshape(len(times), dim, dim, order="F")
+    rhos = 0.5 * (rhos + np.conj(np.swapaxes(rhos, 1, 2)))
+    traces = np.trace(rhos, axis1=1, axis2=2).real
+    rhos = rhos / traces[:, None, None]
+    return rhos
+
+
+def observables_from_rhos(rhos: np.ndarray, nmax: int):
+    diag = np.real(np.diagonal(rhos, axis1=1, axis2=2))
+    diag = diag.reshape(len(rhos), nmax + 1, 2)
+    pg = diag[:, :, 0].sum(axis=1)
+    pe = diag[:, :, 1].sum(axis=1)
+    n = np.arange(nmax + 1)[None, :]
+    field_dist = diag.sum(axis=2)
+    mean_n = (field_dist * n).sum(axis=1)
+    purity = np.real(np.einsum("tij,tji->t", rhos, rhos))
+    return pe, pg, mean_n, field_dist, purity
+
+
+def bloch_vectors_from_rhos(rhos: np.ndarray, nmax: int):
+    reshaped = rhos.reshape(len(rhos), nmax + 1, 2, nmax + 1, 2)
+    rho_atom = np.zeros((len(rhos), 2, 2), dtype=complex)
+    rho_atom[:, 0, 0] = np.sum(reshaped[:, :, 0, :, 0][:, np.arange(nmax + 1), np.arange(nmax + 1)], axis=1)
+    rho_atom[:, 1, 1] = np.sum(reshaped[:, :, 1, :, 1][:, np.arange(nmax + 1), np.arange(nmax + 1)], axis=1)
+    rho_atom[:, 0, 1] = np.sum(reshaped[:, :, 0, :, 1][:, np.arange(nmax + 1), np.arange(nmax + 1)], axis=1)
+    rho_atom[:, 1, 0] = np.conj(rho_atom[:, 0, 1])
+    bx = 2.0 * np.real(rho_atom[:, 0, 1])
+    by = 2.0 * np.imag(rho_atom[:, 0, 1])
+    bz = np.real(rho_atom[:, 1, 1] - rho_atom[:, 0, 0])
+    return bx, by, bz
 
 
 def observables_from_states(states: np.ndarray):
@@ -797,7 +957,7 @@ def main():
     with st.expander(tr("theory_title"), expanded=False):
         st.markdown(TEXT[st.session_state.app_lang]["theory_body"])
 
-    tabs = st.tabs([tr("tab_light"), tr("tab_jc"), tr("tab_vacuum"), tr("tab_revival"), tr("tab_detuning")])
+    tabs = st.tabs([tr("tab_light"), tr("tab_jc"), tr("tab_vacuum"), tr("tab_revival"), tr("tab_open"), tr("tab_detuning")])
 
     with tabs[0]:
         with st.expander(tr("help_light"), expanded=False):
@@ -957,6 +1117,61 @@ def main():
         st.plotly_chart(animated_bloch_sphere(times, bx, by, bz), use_container_width=True)
 
     with tabs[4]:
+        with st.expander(tr("help_open"), expanded=False):
+            st.markdown(tr("help_open_body"))
+        cols = st.columns([1.0, 1.0, 0.7])
+        with cols[0]:
+            st.slider(tr("nmax"), 4, 16, key="open_nmax")
+            st.slider(tr("coupling"), 0.01, 0.25, step=0.01, key="open_g")
+            st.slider(tr("detuning"), -0.40, 0.40, step=0.01, key="open_delta")
+        with cols[1]:
+            st.slider(tr("cavity_loss"), 0.0, 0.10, step=0.002, key="open_kappa")
+            st.slider(tr("atomic_decay"), 0.0, 0.10, step=0.002, key="open_gamma")
+            st.slider(tr("dephasing"), 0.0, 0.10, step=0.002, key="open_gamma_phi")
+            st.slider(tr("tmax"), 20.0, 260.0, step=5.0, key="open_tmax")
+            st.slider(tr("frames"), 24, 140, key="open_frames")
+        with cols[2]:
+            st.button(tr("reset"), key="reset_open", on_click=reset_section, args=("open",))
+
+        times = np.linspace(0.0, st.session_state.open_tmax, int(st.session_state.open_frames))
+        psi0 = basis_state(st.session_state.open_nmax, "e", 1 if st.session_state.open_nmax >= 1 else 0)
+        rho0 = np.outer(psi0, np.conj(psi0))
+        rhos = evolve_density_matrices(
+            st.session_state.open_nmax,
+            rho0,
+            st.session_state.open_g,
+            st.session_state.open_delta,
+            st.session_state.open_kappa,
+            st.session_state.open_gamma,
+            st.session_state.open_gamma_phi,
+            times,
+        )
+        pe, pg, mean_n, field_dist, purity = observables_from_rhos(rhos, st.session_state.open_nmax)
+
+        cplot1, cplot2 = st.columns(2)
+        with cplot1:
+            fig1 = go.Figure()
+            fig1.add_trace(go.Scatter(x=times, y=pe, mode="lines", name=tr("excited_pop")))
+            fig1.add_trace(go.Scatter(x=times, y=pg, mode="lines", name=tr("ground_pop")))
+            fig1.update_layout(height=380, xaxis_title=tr("time"), yaxis_title="P", margin=dict(l=20, r=20, t=30, b=20), legend=dict(orientation="h"))
+            st.plotly_chart(fig1, use_container_width=True)
+        with cplot2:
+            fig2 = go.Figure()
+            fig2.add_trace(go.Scatter(x=times, y=mean_n, mode="lines", name=tr("mean_photons")))
+            fig2.add_trace(go.Scatter(x=times, y=purity, mode="lines", name=tr("purity"), yaxis="y2"))
+            fig2.update_layout(height=380, xaxis_title=tr("time"), yaxis=dict(title=tr("mean_photons")), yaxis2=dict(title=tr("purity"), overlaying="y", side="right", range=[0, 1.02]), margin=dict(l=20, r=20, t=30, b=20), legend=dict(orientation="h"))
+            st.plotly_chart(fig2, use_container_width=True)
+
+        st.plotly_chart(animated_jc_figure(times, pe, pg, mean_n, field_dist), use_container_width=True)
+        st.plotly_chart(animated_marker_figure(times, purity, tr("purity")), use_container_width=True)
+
+        bloch_text = bloch_copy()
+        with st.expander(bloch_text["title"], expanded=False):
+            st.markdown(bloch_text["body"])
+        bx, by, bz = bloch_vectors_from_rhos(rhos, st.session_state.open_nmax)
+        st.plotly_chart(animated_bloch_sphere(times, bx, by, bz), use_container_width=True)
+
+    with tabs[5]:
         with st.expander(tr("help_detuning"), expanded=False):
             st.markdown(tr("help_detuning_body"))
         cols = st.columns([1.0, 1.0, 0.7])
