@@ -6,16 +6,17 @@ from scipy.linalg import eigh
 
 st.set_page_config(page_title="Quantum Electrodynamics Explorer", layout="wide")
 
+
 TEXT = {
     "en": {
         "app_title": "Quantum Electrodynamics Explorer",
-        "subtitle": "An interactive introduction to quantized light, a two-level atom, and the Jaynes–Cummings model.",
+        "subtitle": "An interactive view of cavity QED: quantized light, a two-level atom, and Jaynes–Cummings dynamics in the broader context of quantum mechanics and modern physics.",
         "language": "Language",
-        "theory_title": "Theory and context",
+        "theory_title": "Theory, context, and references",
         "theory_body": r"""
-This app uses a minimal and visually accessible model of quantum electrodynamics: one **quantized cavity mode** interacting with one **two-level atom**.
+This app sits at the boundary between **quantum mechanics**, **quantized radiation**, and **light–matter interaction**. In ordinary introductory quantum mechanics one first learns discrete levels, superposition, and two-level systems. Quantum electrodynamics extends this logic to the electromagnetic field itself: instead of treating light only as a classical wave, one quantizes the field and obtains photon-number states, creation and annihilation operators, and genuinely quantum atom–field exchange. In practice, one of the cleanest and most useful settings is **cavity QED**, where a single field mode interacts strongly with a single effective two-level system. That controlled setting is the focus of this simulator [1–6].
 
-### Core ingredients
+### Minimal model used here
 
 For the field, the photon-number states are $|n\rangle$ with energies
 
@@ -23,32 +24,46 @@ $$
 E_n = \hbar \omega_c \left(n + \frac{1}{2}\right).
 $$
 
-The creation and annihilation operators $a^\dagger$ and $a$ change the photon number by one.
+The operators $a^\dagger$ and $a$ raise and lower the photon number by one. For the atom, the basis states are the ground state $|g\rangle$ and excited state $|e\rangle$, separated by $\hbar \omega_0$.
 
-For the atom, the two basis states are the ground state $|g\rangle$ and excited state $|e\rangle$, separated by an energy $\hbar \omega_0$.
-
-The combined light–matter dynamics is described here with the **Jaynes–Cummings Hamiltonian**
+The coupled dynamics is described here by the **Jaynes–Cummings Hamiltonian**
 
 $$
 H = \hbar \omega_c\, a^\dagger a + \frac{\hbar \omega_0}{2}\sigma_z + \hbar g \left(a^\dagger \sigma_- + a \sigma_+\right),
 $$
 
-where $g$ is the coupling strength.
+with coupling strength $g$. This model is historically central because it makes explicit how one quantum of excitation can be coherently exchanged between matter and a single quantized radiation mode [1]. In modern language, it is one of the standard model Hamiltonians of cavity QED and quantum optics [3–6].
 
-### What to look for
+### Why this is physically important
 
-- **Quantized light:** photon-number distributions are discrete.
-- **Resonant exchange:** excitation oscillates between atom and field.
-- **Vacuum Rabi oscillations:** even the state $|e,0\rangle$ evolves non-trivially.
-- **Collapse and revival:** with a coherent field, many nearby Rabi frequencies first dephase and later rephase.
-- **Detuning:** when $\omega_0 \neq \omega_c$, energy exchange becomes less efficient.
+The simulator brings together several ideas that often appear separately in courses:
 
-### References
+- **Quantized light:** the field has discrete excitation sectors labelled by photon number, not just a continuous classical amplitude [2–4].
+- **Two-level dynamics:** a two-state atom is the simplest nontrivial quantum system and naturally leads to Bloch-sphere intuition [3,4].
+- **Coherent exchange:** on or near resonance, excitation oscillates between atom and field rather than decaying irreversibly in the ideal closed model [1,3–6].
+- **Vacuum effects:** even the state $|e,0\rangle$ evolves nontrivially because the vacuum of the quantized field is not equivalent to “nothing happening” in the coupled quantum problem [3,5,6].
+- **Collapse and revival:** if the field begins in a coherent state, many nearby Rabi frequencies participate, producing dephasing and later rephasing of the atomic signal [3,4,7].
 
-- C. Cohen-Tannoudji, J. Dupont-Roc, G. Grynberg, *Photons and Atoms*.
-- M. O. Scully, M. S. Zubairy, *Quantum Optics*.
-- D. F. Walls, G. J. Milburn, *Quantum Optics*.
-- C. Gerry, P. Knight, *Introductory Quantum Optics*.
+### What is shown here — and what is not
+
+This app is intentionally a **minimal closed-system model**. It uses:
+- a single cavity mode,
+- one effective two-level atom,
+- the rotating-wave form of the interaction,
+- a truncated photon basis for numerics,
+- dimensionless units with $\hbar=1$ and $\omega_c=1$.
+
+That makes the central physics transparent, but it also means this is **not** a full relativistic QED calculation. There is no spontaneous emission into free space, no cavity loss, no driving field, no multimode continuum, and no renormalization. The goal is clarity: to isolate the clean coherent structures that make cavity-QED dynamics so useful and so conceptually rich [3–6].
+
+### Selected references
+
+[1] E. T. Jaynes and F. W. Cummings, *Comparison of quantum and semiclassical radiation theories with application to the beam maser*, Proc. IEEE **51**, 89–109 (1963).  
+[2] C. Cohen-Tannoudji, J. Dupont-Roc, and G. Grynberg, *Photons and Atoms: Introduction to Quantum Electrodynamics* (Wiley, 1989).  
+[3] M. O. Scully and M. S. Zubairy, *Quantum Optics* (Cambridge University Press, 1997).  
+[4] C. C. Gerry and P. L. Knight, *Introductory Quantum Optics*, 2nd ed. (Cambridge University Press, 2023).  
+[5] J.-M. Raimond, M. Brune, and S. Haroche, *Manipulating quantum entanglement with atoms and photons in a cavity*, Rev. Mod. Phys. **73**, 565–582 (2001).  
+[6] S. Haroche, *Controlling photons in a box and exploring the quantum to classical boundary*, Rev. Mod. Phys. **85**, 1083–1102 (2013).  
+[7] J. H. Eberly, N. B. Narozhny, and J. J. Sánchez-Mondragón, *Periodic spontaneous collapse and revival in a simple quantum model*, Phys. Rev. Lett. **44**, 1323–1326 (1980).
 """,
         "tab_light": "Quantized light",
         "tab_jc": "Atom–field dynamics",
@@ -57,49 +72,98 @@ where $g$ is the coupling strength.
         "tab_detuning": "Detuning",
         "help_light": "How to use this panel",
         "help_light_body": r"""
-Choose a quantum state of one cavity mode and inspect its photon-number distribution $P_n$.
+This panel focuses only on the **field mode**. It is the cleanest place to compare standard quantum states of light before coupling them to the atom [2–4].
 
-- **Fock state:** exactly one photon number is occupied.
-- **Coherent state:** Poisson-like distribution, closest to a classical single-mode field.
-- **Thermal state:** broad distribution with stronger fluctuations.
+### What the controls do
+- **Field state** selects the state family.
+- **Maximum photon number** sets the truncation of the photon basis used in the plot.
+- The last control sets the parameter of the chosen family: exact photon number $n$ for a Fock state, coherent amplitude $|\alpha|$ for a coherent state, or mean photon number $\bar n$ for a thermal-like state.
 
-The bar chart shows the probability of finding $n$ photons. The metrics below it summarize the mean photon number and the variance.
+### What the graphics show
+- **Bar chart:** the photon-number distribution $P_n$, i.e. the probability of finding exactly $n$ photons in the mode.
+- **Metrics:** the mean photon number, the variance, and the most likely photon number.
+
+### How to read the results
+- **Fock state:** one bar is occupied. The photon number is sharp, so the variance is minimal for that fixed $n$ [2–4].
+- **Coherent state:** the distribution is approximately Poissonian. Mean and variance are of comparable size, which is one reason coherent states are often regarded as the quantum states closest to a classical single-mode field [3,4].
+- **Thermal-like state:** the distribution is broader and more strongly fluctuating. The field is much noisier than in a coherent state with the same mean occupation [3,4].
+
+A useful comparison is to keep the mean photon number roughly fixed and switch between coherent and thermal-like states. The shapes of $P_n$ then immediately show how photon statistics encode physically different field states [3,4].
+
+References: [2–4].
 """,
         "help_jc": "How to use this panel",
         "help_jc_body": r"""
-Choose the initial atomic state, the initial photon number, the coupling strength, and the detuning.
+This is the main Jaynes–Cummings panel. It shows how one effective atomic transition exchanges excitation with one quantized cavity mode [1,3–6].
 
-What you see:
-- **Left:** populations of the excited and ground atomic states versus time.
-- **Right:** the mean photon number versus time.
-- **Animation:** a moving marker traces the time evolution, while the lower bar chart shows the instantaneous photon distribution in the field.
+### What the controls do
+- **Initial atomic state** chooses whether the atom starts in $|e\rangle$ or $|g\rangle$.
+- **Initial photon number** sets the Fock-state occupation of the field at $t=0$.
+- **Coupling** sets $g/\omega_c$.
+- **Detuning** sets $\Delta/\omega_c = (\omega_0-\omega_c)/\omega_c$.
+- **Maximum time** and **animation frames** set the displayed time window and animation resolution.
 
-On resonance, the excitation swaps most efficiently between the atom and the field.
+### What each graph shows
+- **Left line plot:** atomic populations $P_e(t)$ and $P_g(t)$. These tell you how likely the atom is to be found excited or in the ground state.
+- **Right line plot:** mean photon number $\langle n(t)\rangle$ in the field mode.
+- **Animated lower panel:** the same time traces with a moving marker, plus the **instantaneous photon-number distribution** of the field.
+- **Bloch sphere panel:** the reduced atomic state visualized as a point with Bloch coordinates $(x,y,z)$. Pure atomic states lie on the sphere; mixed reduced states lie inside it.
+
+### How to interpret the dynamics
+In the closed Jaynes–Cummings model, total excitation is redistributed coherently between the atom and the field. On resonance, the oscillatory exchange is strongest. Off resonance, transfer is weaker because the atom and cavity are no longer optimally matched in energy [1,3–6].
+
+The Bloch-sphere view is especially useful: if the atom becomes entangled with the field, the **reduced atomic state** is generally no longer pure, so the trajectory moves inside the sphere rather than staying on its surface [3,4]. This makes the relation between population dynamics and coherence visually explicit.
+
+References: [1], [3]–[6].
 """,
         "help_vacuum": "How to use this panel",
         "help_vacuum_body": r"""
-This panel fixes the initial state to $|e,0\rangle$.
+This panel fixes the initial state to $|e,0\rangle$: the atom starts excited and the cavity mode starts in the vacuum state.
 
-Although there is no classical light in the cavity, the atom and the quantized field still exchange excitation coherently. That is the basic vacuum Rabi effect in this minimal model.
+### What each graph shows
+- **Left line plot:** excited- and ground-state populations of the atom.
+- **Right line plot:** mean photon number in the cavity.
+- **Animated panel:** a moving marker in time together with the instantaneous field photon distribution.
+- **Bloch sphere panel:** the reduced atomic state during the evolution.
+
+### Why this panel matters
+The point of this panel is conceptual. There is **no classical drive field** in the cavity, yet the coupled quantum system still evolves. In the Jaynes–Cummings model, the atomic excitation can be coherently exchanged with the quantized cavity mode, producing the basic vacuum Rabi oscillation [3–6].
+
+This does not mean that “vacuum is full of real photons” in a naive classical sense. Rather, the quantized field has its own allowed states and operators, and the coupled atom–field Hamiltonian generates nontrivial dynamics even when the field starts in the vacuum number state [3,5,6].
+
+References: [3]–[6].
 """,
         "help_revival": "How to use this panel",
         "help_revival_body": r"""
-The atom starts excited and the field starts in a coherent state.
+Here the atom starts in $|e\rangle$ while the field starts in a **coherent state**. This is the panel where the celebrated **collapse and revival** phenomenon appears most clearly [3,4,7].
 
-Because a coherent state contains many photon numbers at once, several nearby Rabi frequencies participate in the dynamics. At first they dephase, which produces a collapse of the oscillations. Later they rephase, which produces a revival.
+### What each graph shows
+- **Left line plot:** excited-state probability $P_e(t)$ of the atom.
+- **Right line plot:** mean photon number of the cavity mode.
+- **Animated panel:** a moving marker along the atomic excitation curve.
+- **Bloch sphere panel:** the reduced atomic state during the evolution.
 
-- **Left:** atomic excitation probability.
-- **Right:** mean photon number.
-- **Animation:** the marker shows the current time during the evolution.
+### How to read the physics
+A coherent field contains many photon-number components at once. In the Jaynes–Cummings model, different photon numbers couple with slightly different effective Rabi frequencies. At early times these contributions are still phase-aligned and the atomic signal oscillates clearly. Later they dephase, and the oscillation envelope appears to collapse. At still later times they rephase and a revival emerges [3,4,7].
+
+This panel is a good reminder that the collapse is **not** dissipation in this ideal closed model. It is a dephasing effect inside a coherent superposition of many number sectors, and the later revival is the signature that the dynamics remained unitary [3,4,7].
+
+References: [3], [4], [7].
 """,
         "help_detuning": "How to use this panel",
         "help_detuning_body": r"""
-This panel scans the detuning $\Delta = \omega_0 - \omega_c$.
+This panel scans the atom–cavity detuning $\Delta = \omega_0 - \omega_c$ and shows how the population dynamics changes across resonance [1,3–6].
 
-- **Heatmap:** excited-state population $P_e(t)$ as a function of time and detuning.
-- **Line plot:** a selected detuning cut through the heatmap.
+### What each graph shows
+- **Heatmap:** the excited-state population $P_e(t)$ as a function of time and detuning.
+- **Selected-detuning line plot:** a one-dimensional cut through the heatmap at the chosen detuning.
 
-Near resonance the atom–field exchange is strongest. Far from resonance it becomes weaker and faster in phase.
+### How to interpret the patterns
+Near $\Delta=0$, atom and cavity are resonant and exchange excitation most effectively. The heatmap therefore shows the strongest oscillation contrast around the center. As $|\Delta|$ grows, the mismatch in energy suppresses the transfer and changes the oscillation pattern [1,3–6].
+
+The line plot is useful for connecting the global map to one concrete time trace. Try moving the detuning slider from the center outward and compare how the oscillation amplitude and apparent period change.
+
+References: [1], [3]–[6].
 """,
         "reset": "Reset section",
         "nmax": "Maximum photon number",
@@ -129,52 +193,66 @@ Near resonance the atom–field exchange is strongest. Far from resonance it bec
         "inst_field_dist": "Instantaneous field photon distribution",
         "selected_detuning": "Selected detuning cut",
         "detuning_range": "Maximum |Δ| / ωc for scan",
-        "vacuum_note": "Initial state fixed to |e,0⟩.",
-        "realizations_note": "All calculations are done in dimensionless units with ħ = 1 and ωc = 1.",
-        "footer": "Numerics: vectorized NumPy/SciPy implementation with dense diagonalization of the Jaynes–Cummings Hamiltonian.",
+        "vacuum_note": "Initial state fixed to $|e,0\\rangle$.",
+        "realizations_note": "All calculations use dimensionless units with $\\hbar = 1$ and $\\omega_c = 1$. The photon basis is truncated at the chosen maximum photon number.",
+        "footer": "Model scope: closed single-mode cavity-QED dynamics in the Jaynes–Cummings model with vectorized NumPy/SciPy diagonalization. See the reference list in the theory section for the physical background.",
     },
     "cs": {
         "app_title": "Průzkumník kvantové elektrodynamiky",
-        "subtitle": "Interaktivní úvod do kvantovaného světla, dvouhladinového atomu a Jaynes–Cummingsova modelu.",
+        "subtitle": "Interaktivní pohled na cavity QED: kvantované světlo, dvouhladinový atom a Jaynesův–Cummingsův model v širším kontextu kvantové mechaniky a fyziky.",
         "language": "Jazyk",
-        "theory_title": "Teorie a kontext",
+        "theory_title": "Teorie, kontext a reference",
         "theory_body": r"""
-Tato aplikace používá minimální a vizuálně dobře uchopitelný model kvantové elektrodynamiky: jeden **kvantovaný mód dutiny** interagující s jedním **dvouhladinovým atomem**.
+Tato aplikace leží na rozhraní **kvantové mechaniky**, **kvantovaného záření** a **interakce světla s hmotou**. V běžném úvodu do kvantové mechaniky se člověk nejprve setká s diskrétními hladinami, superpozicí a dvouúrovňovými systémy. Kvantová elektrodynamika rozšiřuje tuto logiku i na samotné elektromagnetické pole: místo čistě klasické vlny se pole kvantuje a vznikají stavy s pevným počtem fotonů, operátory vytváření a anihilace a skutečně kvantová výměna excitace mezi atomem a polem. V praxi patří mezi nejčistší a nejpoužívanější realizace **cavity QED**, kde jeden mód pole silně interaguje s jedním efektivním dvouhladinovým systémem. Právě na tuto situaci se tato simulace soustředí [1–6].
 
-### Základní stavební prvky
+### Minimální model použitý zde
 
-Pro pole jsou stavy s pevným počtem fotonů $|n\rangle$ a jejich energie
+Pro pole používáme stavy s pevným počtem fotonů $|n\rangle$ a jejich energie
 
 $$
 E_n = \hbar \omega_c \left(n + \frac{1}{2}\right).
 $$
 
-Operátory $a^\dagger$ a $a$ mění počet fotonů o jedničku.
+Operátory $a^\dagger$ a $a$ zvyšují a snižují počet fotonů o jedničku. Pro atom používáme stavy $|g\rangle$ a $|e\rangle$, oddělené energií $\hbar \omega_0$.
 
-Pro atom používáme dva stavy: základní stav $|g\rangle$ a excitovaný stav $|e\rangle$, oddělené energií $\hbar \omega_0$.
-
-Spojená dynamika pole a atomu je zde popsána **Jaynes–Cummingsovým Hamiltoniánem**
+Vázaná dynamika je zde popsána **Jaynesovým–Cummingsovým Hamiltoniánem**
 
 $$
 H = \hbar \omega_c\, a^\dagger a + \frac{\hbar \omega_0}{2}\sigma_z + \hbar g \left(a^\dagger \sigma_- + a \sigma_+\right),
 $$
 
-kde $g$ je síla vazby.
+kde $g$ je síla vazby. Tento model je historicky zásadní, protože explicitně ukazuje, jak se může jeden kvant excitace koherentně přelévat mezi hmotou a jedním kvantovaným módem záření [1]. V současné terminologii jde o jeden ze standardních modelových Hamiltoniánů cavity QED a kvantové optiky [3–6].
 
-### Na co se zaměřit
+### Proč je to fyzikálně důležité
 
-- **Kvantované světlo:** rozdělení počtu fotonů je diskrétní.
-- **Rezonanční výměna:** excitace osciluje mezi atomem a polem.
-- **Vakuové Rabiho oscilace:** i stav $|e,0\rangle$ má netriviální vývoj.
-- **Kolaps a revival:** koherentní pole vede nejprve k rozfázování a poté k opětovnému složení oscilací.
-- **Detuning:** když $\omega_0 \neq \omega_c$, přenos energie je méně účinný.
+Simulace spojuje několik myšlenek, které se ve výuce často objevují odděleně:
 
-### Reference
+- **Kvantované světlo:** pole má diskrétní excitační sektory označené počtem fotonů, ne jen spojitou klasickou amplitudu [2–4].
+- **Dvouúrovňová dynamika:** dvoustavový atom je nejjednodušší netriviální kvantový systém a přirozeně vede k intuici přes Blochovu kouli [3,4].
+- **Koherentní výměna:** na rezonanci nebo blízko rezonance se excitace mezi atomem a polem oscilatorně přelévá místo nevratného rozpadu v ideálním uzavřeném modelu [1,3–6].
+- **Vakuové efekty:** i stav $|e,0\rangle$ má netriviální vývoj, protože vakuum kvantovaného pole není vázaném systému totéž co „nic se neděje“ [3,5,6].
+- **Kolaps a revival:** pokud pole začíná v koherentním stavu, účastní se dynamiky více blízkých Rabiho frekvencí, což vede k rozfázování a pozdějšímu znovusložení atomového signálu [3,4,7].
 
-- C. Cohen-Tannoudji, J. Dupont-Roc, G. Grynberg, *Photons and Atoms*.
-- M. O. Scully, M. S. Zubairy, *Quantum Optics*.
-- D. F. Walls, G. J. Milburn, *Quantum Optics*.
-- C. Gerry, P. Knight, *Introductory Quantum Optics*.
+### Co tato aplikace ukazuje — a co ne
+
+Aplikace je záměrně postavena jako **minimální uzavřený model**. Používá:
+- jeden mód dutiny,
+- jeden efektivní dvouhladinový atom,
+- interakci ve tvaru rotating-wave approximation,
+- ořezanou bázi počtu fotonů pro numeriku,
+- bezrozměrné jednotky s $\hbar=1$ a $\omega_c=1$.
+
+To zpřehledňuje základní fyziku, ale zároveň to znamená, že nejde o **plný relativistický výpočet QED**. Chybí spontánní emise do volného prostoru, ztráty v dutině, buzení vnějším polem, multimódové kontinuum i renormalizace. Smyslem je přehlednost: izolovat koherentní struktury, které dělají dynamiku cavity QED tak užitečnou i konceptuálně silnou [3–6].
+
+### Vybrané reference
+
+[1] E. T. Jaynes and F. W. Cummings, *Comparison of quantum and semiclassical radiation theories with application to the beam maser*, Proc. IEEE **51**, 89–109 (1963).  
+[2] C. Cohen-Tannoudji, J. Dupont-Roc, and G. Grynberg, *Photons and Atoms: Introduction to Quantum Electrodynamics* (Wiley, 1989).  
+[3] M. O. Scully and M. S. Zubairy, *Quantum Optics* (Cambridge University Press, 1997).  
+[4] C. C. Gerry and P. L. Knight, *Introductory Quantum Optics*, 2nd ed. (Cambridge University Press, 2023).  
+[5] J.-M. Raimond, M. Brune, and S. Haroche, *Manipulating quantum entanglement with atoms and photons in a cavity*, Rev. Mod. Phys. **73**, 565–582 (2001).  
+[6] S. Haroche, *Controlling photons in a box and exploring the quantum to classical boundary*, Rev. Mod. Phys. **85**, 1083–1102 (2013).  
+[7] J. H. Eberly, N. B. Narozhny, and J. J. Sánchez-Mondragón, *Periodic spontaneous collapse and revival in a simple quantum model*, Phys. Rev. Lett. **44**, 1323–1326 (1980).
 """,
         "tab_light": "Kvantované světlo",
         "tab_jc": "Dynamika atom–pole",
@@ -183,49 +261,98 @@ kde $g$ je síla vazby.
         "tab_detuning": "Detuning",
         "help_light": "Jak tento panel používat",
         "help_light_body": r"""
-Vyber kvantový stav jednoho módu dutiny a prohlédni si rozdělení pravděpodobnosti $P_n$ pro počet fotonů.
+Tento panel se soustředí pouze na **mód pole**. Je to nejčistší místo pro srovnání standardních kvantových stavů světla ještě před jejich svázáním s atomem [2–4].
 
-- **Fockův stav:** obsazen je právě jeden počet fotonů.
-- **Koherentní stav:** Poissonovské rozdělení, nejbližší klasickému jednomódovému poli.
-- **Tepelný stav:** široké rozdělení se silnějšími fluktuacemi.
+### Co dělají ovládací prvky
+- **Stav pole** vybírá rodinu stavů.
+- **Maximální počet fotonů** nastavuje ořez báze počtu fotonů používané v grafu.
+- Poslední ovladač nastavuje parametr zvolené rodiny: přesný počet fotonů $n$ pro Fockův stav, koherentní amplitudu $|\alpha|$ pro koherentní stav nebo střední počet fotonů $\bar n$ pro tepelný stav.
 
-Sloupcový graf ukazuje pravděpodobnost výskytu $n$ fotonů. Pod ním jsou shrnuty střední hodnota a variance.
+### Co ukazují grafy
+- **Sloupcový graf:** rozdělení $P_n$, tedy pravděpodobnost nalezení právě $n$ fotonů v módu.
+- **Metriky:** střední počet fotonů, variance a nejpravděpodobnější hodnota $n$.
+
+### Jak tomu rozumět
+- **Fockův stav:** obsazen je jediný sloupec. Počet fotonů je ostrý, takže variance je pro dané $n$ minimální [2–4].
+- **Koherentní stav:** rozdělení je přibližně Poissonovské. Střední hodnota a variance jsou srovnatelné, a právě proto jsou koherentní stavy často považovány za kvantové stavy nejbližší klasickému jednomódovému poli [3,4].
+- **Tepelný stav:** rozdělení je širší a fluktuace jsou silnější. Pole je mnohem „šumovější“ než koherentní stav se stejnou střední obsazeností [3,4].
+
+Užitečné je držet přibližně stejný střední počet fotonů a přepínat mezi koherentním a tepelným stavem. Tvar $P_n$ pak okamžitě ukáže, jak fotonová statistika rozlišuje fyzikálně odlišné stavy pole [3,4].
+
+Reference: [2–4].
 """,
         "help_jc": "Jak tento panel používat",
         "help_jc_body": r"""
-Zvol počáteční stav atomu, počáteční počet fotonů, sílu vazby a detuning.
+Toto je hlavní panel Jaynesova–Cummingsova modelu. Ukazuje, jak si jeden efektivní atomový přechod vyměňuje excitaci s jedním kvantovaným módem dutiny [1,3–6].
 
-Co je zobrazeno:
-- **Vlevo:** populace excitovaného a základního stavu atomu v čase.
-- **Vpravo:** střední počet fotonů v čase.
-- **Animace:** pohyblivý bod ukazuje aktuální čas a spodní sloupcový graf ukazuje okamžité rozdělení fotonů v poli.
+### Co dělají ovládací prvky
+- **Počáteční stav atomu** volí, zda atom začíná v $|e\rangle$ nebo $|g\rangle$.
+- **Počáteční počet fotonů** nastavuje Fockův stav pole v čase $t=0$.
+- **Vazba** nastavuje $g/\omega_c$.
+- **Detuning** nastavuje $\Delta/\omega_c = (\omega_0-\omega_c)/\omega_c$.
+- **Maximální čas** a **počet snímků animace** určují zobrazené časové okno a rozlišení animace.
 
-Na rezonanci se excitace mezi atomem a polem přelévá nejúčinněji.
+### Co ukazuje každý graf
+- **Levý čárový graf:** atomové populace $P_e(t)$ a $P_g(t)$. Ty říkají, s jakou pravděpodobností je atom excitovaný nebo v základním stavu.
+- **Pravý čárový graf:** střední počet fotonů $\langle n(t)\rangle$ v módu pole.
+- **Dolní animovaný panel:** stejné časové průběhy s pohyblivým bodem v čase a navíc **okamžité rozdělení počtu fotonů** v poli.
+- **Panel s Blochovou koulí:** redukovaný atomový stav zobrazený bodem s Blochovými souřadnicemi $(x,y,z)$. Čisté atomové stavy leží na povrchu, smíšené redukované stavy uvnitř.
+
+### Jak interpretovat dynamiku
+V uzavřeném Jaynesově–Cummingsově modelu se celková excitace koherentně přerozděluje mezi atomem a polem. Na rezonanci je tato výměna nejsilnější. Mimo rezonanci je přenos slabší, protože atom a dutina už nejsou energeticky optimálně sladěny [1,3–6].
+
+Pohled přes Blochovu kouli je zvlášť užitečný: pokud se atom prováže s polem, **redukovaný atomový stav** obecně přestane být čistý, a trajektorie se proto pohybuje i uvnitř koule, ne jen po povrchu [3,4]. To přímo propojuje populační dynamiku a koherenci.
+
+Reference: [1], [3]–[6].
 """,
         "help_vacuum": "Jak tento panel používat",
         "help_vacuum_body": r"""
-Tento panel fixuje počáteční stav na $|e,0\rangle$.
+Tento panel fixuje počáteční stav na $|e,0\rangle$: atom začíná excitovaný a mód dutiny ve vakuu.
 
-I když v dutině není žádné klasické světlo, atom a kvantované pole si stále koherentně vyměňují excitaci. To je základní vakuový Rabiho jev v tomto minimálním modelu.
+### Co ukazuje každý graf
+- **Levý čárový graf:** populace excitovaného a základního stavu atomu.
+- **Pravý čárový graf:** střední počet fotonů v dutině.
+- **Animovaný panel:** pohyblivý bod v čase spolu s okamžitým rozdělením počtu fotonů v poli.
+- **Panel s Blochovou koulí:** redukovaný atomový stav během vývoje.
+
+### Proč je tento panel důležitý
+Smysl tohoto panelu je konceptuální. V dutině **není žádné klasické budicí pole**, a přesto se vázaný kvantový systém vyvíjí. V Jaynesově–Cummingsově modelu se atomová excitace může koherentně přelévat do kvantovaného módu pole a zpět, čímž vzniká základní vakuový Rabiho jev [3–6].
+
+Neznamená to, že by vakuum bylo v naivním klasickém smyslu „plné reálných fotonů“. Znamená to, že kvantované pole má své vlastní stavy a operátory a že spojený Hamiltonián generuje netriviální dynamiku i tehdy, když pole začíná ve vakuovém číselném stavu [3,5,6].
+
+Reference: [3]–[6].
 """,
         "help_revival": "Jak tento panel používat",
         "help_revival_body": r"""
-Atom začíná v excitovaném stavu a pole v koherentním stavu.
+Zde atom začíná ve stavu $|e\rangle$ a pole v **koherentním stavu**. Právě zde se nejzřetelněji objevuje slavný jev **kolapsu a revivalu** [3,4,7].
 
-Protože koherentní stav obsahuje současně více počtů fotonů, účastní se dynamiky více blízkých Rabiho frekvencí. Nejprve se rozfázují, což vede ke kolapsu oscilací. Později se znovu složí a objeví se revival.
+### Co ukazuje každý graf
+- **Levý čárový graf:** pravděpodobnost excitovaného stavu atomu $P_e(t)$.
+- **Pravý čárový graf:** střední počet fotonů v módu dutiny.
+- **Animovaný panel:** pohyblivý bod podél křivky atomové excitace.
+- **Panel s Blochovou koulí:** redukovaný atomový stav během vývoje.
 
-- **Vlevo:** pravděpodobnost excitovaného stavu atomu.
-- **Vpravo:** střední počet fotonů.
-- **Animace:** bod ukazuje aktuální čas v průběhu vývoje.
+### Jak číst fyziku
+Koherentní pole obsahuje současně více složek s různým počtem fotonů. V Jaynesově–Cummingsově modelu se různé počty fotonů pojí s mírně odlišnými efektivními Rabiho frekvencemi. Na začátku jsou tyto příspěvky ještě fázově sladěné a atomový signál dobře osciluje. Později se rozfázují, takže obálka oscilací vypadá jako kolaps. Ještě později se znovu složí a objeví se revival [3,4,7].
+
+Tento panel je dobrou připomínkou, že kolaps v tomto ideálním uzavřeném modelu **není disipace**. Jde o dephasing uvnitř koherentní superpozice více sektorů s různým počtem fotonů a pozdější revival je známkou toho, že vývoj zůstal unitární [3,4,7].
+
+Reference: [3], [4], [7].
 """,
         "help_detuning": "Jak tento panel používat",
         "help_detuning_body": r"""
-Tento panel skenuje detuning $\Delta = \omega_0 - \omega_c$.
+Tento panel skenuje detuning atom–dutina $\Delta = \omega_0 - \omega_c$ a ukazuje, jak se populační dynamika mění při průchodu rezonancí [1,3–6].
 
+### Co ukazuje každý graf
 - **Heatmapa:** populace excitovaného stavu $P_e(t)$ jako funkce času a detuningu.
-- **Čárový graf:** vybraný řez heatmapou pro konkrétní detuning.
+- **Čárový graf vybraného řezu:** jednorozměrný řez heatmapou pro zvolený detuning.
 
-V blízkosti rezonance je výměna mezi atomem a polem nejsilnější. Daleko od rezonance slábne a mění charakter oscilací.
+### Jak interpretovat obrazce
+Blízko $\Delta=0$ jsou atom a dutina na rezonanci a vyměňují si excitaci nejúčinněji. Proto heatmapa ukazuje nejsilnější kontrast oscilací uprostřed. Když roste $|\Delta|$, energetické rozladění přenos potlačuje a mění charakter oscilací [1,3–6].
+
+Čárový graf je užitečný pro propojení globální mapy s jedním konkrétním časovým průběhem. Zkus posouvat slider detuningu od středu směrem ven a porovnat, jak se mění amplituda i zdánlivá perioda oscilací.
+
+Reference: [1], [3]–[6].
 """,
         "reset": "Reset sekce",
         "nmax": "Maximální počet fotonů",
@@ -252,12 +379,12 @@ V blízkosti rezonance je výměna mezi atomem a polem nejsilnější. Daleko od
         "excited_pop": "Populace excitovaného stavu",
         "ground_pop": "Populace základního stavu",
         "mean_photons": "Střední počet fotonů",
-        "inst_field_dist": "Okamžité rozdělení fotonů v poli",
+        "inst_field_dist": "Okamžité rozdělení počtu fotonů v poli",
         "selected_detuning": "Vybraný řez detuningem",
         "detuning_range": "Maximální |Δ| / ωc pro scan",
-        "vacuum_note": "Počáteční stav je fixován na |e,0⟩.",
-        "realizations_note": "Všechny výpočty jsou v bezrozměrných jednotkách s ħ = 1 a ωc = 1.",
-        "footer": "Numerika: vektorizovaná implementace v NumPy/SciPy s hustou diagonalizací Jaynes–Cummingsova Hamiltoniánu.",
+        "vacuum_note": "Počáteční stav je fixován na $|e,0\\rangle$.",
+        "realizations_note": "Všechny výpočty používají bezrozměrné jednotky s $\\hbar = 1$ a $\\omega_c = 1$. Báze počtu fotonů je oříznuta na zvolený maximální počet fotonů.",
+        "footer": "Rozsah modelu: uzavřená jednómódová cavity-QED dynamika v Jaynesově–Cummingsově modelu s vektorizovanou diagonalizací v NumPy/SciPy. Fyzikální kontext a literaturu najdeš v teoretické části.",
     },
 }
 
@@ -395,6 +522,7 @@ def bloch_vectors(states: np.ndarray):
     return bx, by, bz
 
 
+
 def bloch_copy():
     if st.session_state.app_lang == "cs":
         return {
@@ -402,14 +530,18 @@ def bloch_copy():
             "body": r"""
 Tato vizualizace ukazuje **redukovaný stav dvouhladinového atomu** ve formě bodu na Blochově kouli.
 
+### Co zde vidíš
 - severní pól $z=+1$ odpovídá stavu $|e\rangle$,
 - jižní pól $z=-1$ odpovídá stavu $|g\rangle$,
 - body na povrchu představují **čisté stavy**,
-- body uvnitř koule představují **smíšené stavy**.
+- body uvnitř koule představují **smíšené redukované stavy**.
 
-V Jaynesově–Cummingsově dynamice se atom typicky **proplétá** s polem. Proto se redukovaný atomový stav často pohybuje **dovnitř koule**, ne jen po jejím povrchu.
+### Jak tomu rozumět
+V Jaynesově–Cummingsově dynamice se atom typicky **provazuje** s polem. Proto se redukovaný atomový stav často pohybuje **dovnitř koule**, ne jen po jejím povrchu. Když je atomový stav téměř čistý, trajektorie se blíží povrchu; když je atom silněji provázán s polem, redukovaný stav se stává více smíšeným a bod se posouvá dovnitř [3,4].
 
-Matematicky jde o stejnou geometrii jako u **Poincarého koule** pro polarizaci, ale zde je přirozeným názvem **Blochova koule**.
+Matematicky jde o stejnou geometrii jako u **Poincarého koule** pro polarizaci, ale pro dvouúrovňový atom je standardním názvem **Blochova koule**.
+
+Reference: [3], [4].
 """,
         }
     return {
@@ -417,14 +549,18 @@ Matematicky jde o stejnou geometrii jako u **Poincarého koule** pro polarizaci,
         "body": r"""
 This visualization shows the **reduced state of the two-level atom** as a point inside the Bloch sphere.
 
+### What is shown
 - the north pole $z=+1$ corresponds to $|e\rangle$,
 - the south pole $z=-1$ corresponds to $|g\rangle$,
 - points on the surface represent **pure states**,
-- points inside the sphere represent **mixed states**.
+- points inside the sphere represent **mixed reduced states**.
 
-In Jaynes–Cummings dynamics the atom generally becomes **entangled** with the field. That is why the reduced atomic state often moves **inside the sphere**, not only on its surface.
+### How to interpret it
+In Jaynes–Cummings dynamics the atom generally becomes **entangled** with the field. That is why the reduced atomic state often moves **inside the sphere**, not only on its surface. When the atomic state is close to pure, the trajectory approaches the surface; when atom–field entanglement is stronger, the reduced atomic state becomes more mixed and the point moves inward [3,4].
 
 Mathematically this is the same geometry as the **Poincaré sphere** for polarization, but for a two-level atom the standard name is the **Bloch sphere**.
+
+References: [3], [4].
 """,
     }
 
