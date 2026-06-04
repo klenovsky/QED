@@ -1,7 +1,10 @@
+import io
 import math
 import numpy as np
 import plotly.graph_objects as go
 import streamlit as st
+import matplotlib.pyplot as plt
+from PIL import Image
 from scipy.linalg import eig, eigh
 
 st.set_page_config(page_title="Quantum Electrodynamics Explorer", layout="wide")
@@ -481,6 +484,28 @@ def tr(key: str) -> str:
     return TEXT[st.session_state.app_lang][key]
 
 
+def gif_strings():
+    if st.session_state.app_lang == "cs":
+        return {
+            "title": "Uložit tuto animaci jako GIF",
+            "duration": "Délka snímku (ms)",
+            "max_frames": "Maximální počet snímků",
+            "prepare": "Připravit GIF",
+            "download": "Stáhnout GIF",
+            "preparing": "Připravuji GIF…",
+            "note": "GIF bude vytvořen z aktuálně zobrazených dat a parametrů.",
+        }
+    return {
+        "title": "Save this animation as GIF",
+        "duration": "Frame duration (ms)",
+        "max_frames": "Maximum number of frames",
+        "prepare": "Prepare GIF",
+        "download": "Download GIF",
+        "preparing": "Preparing GIF…",
+        "note": "The GIF is generated from the currently displayed data and parameters.",
+    }
+
+
 def init_language():
     if "app_lang" not in st.session_state:
         st.session_state.app_lang = "en"
@@ -946,6 +971,146 @@ def top_language_selector():
     st.session_state.app_lang = lang
 
 
+def _sample_indices(n_frames_total: int, max_frames: int) -> np.ndarray:
+    if n_frames_total <= max_frames:
+        return np.arange(n_frames_total, dtype=int)
+    return np.linspace(0, n_frames_total - 1, max_frames, dtype=int)
+
+
+def _fig_to_image(fig) -> Image.Image:
+    buf = io.BytesIO()
+    fig.savefig(buf, format="png", dpi=140, bbox_inches="tight")
+    plt.close(fig)
+    buf.seek(0)
+    img = Image.open(buf).convert("RGBA")
+    out = img.copy()
+    buf.close()
+    img.close()
+    return out
+
+
+def _frames_to_gif_bytes(frames, duration_ms: int) -> bytes:
+    out = io.BytesIO()
+    first = frames[0]
+    rest = frames[1:]
+    first.save(out, format="GIF", save_all=True, append_images=rest, duration=int(duration_ms), loop=0)
+    return out.getvalue()
+
+
+def make_marker_gif(times, y, y_label, duration_ms=120, max_frames=60):
+    idxs = _sample_indices(len(times), max_frames)
+    frames = []
+    y = np.asarray(y)
+    ymin = float(np.min(y))
+    ymax = float(np.max(y))
+    pad = 0.08 * max(ymax - ymin, 1e-6)
+    for k in idxs:
+        fig, ax = plt.subplots(figsize=(7.2, 3.8))
+        ax.plot(times, y, lw=2)
+        ax.scatter([times[k]], [y[k]], s=55, zorder=3)
+        ax.set_xlabel(tr("time"))
+        ax.set_ylabel(y_label)
+        ax.set_xlim(float(times[0]), float(times[-1]))
+        ax.set_ylim(ymin - pad, ymax + pad)
+        ax.grid(alpha=0.25)
+        frames.append(_fig_to_image(fig))
+    return _frames_to_gif_bytes(frames, duration_ms)
+
+
+def make_jc_gif(times, pe, pg, mean_n, field_dist, duration_ms=120, max_frames=60):
+    idxs = _sample_indices(len(times), max_frames)
+    frames = []
+    n = np.arange(field_dist.shape[1])
+    max_bar = float(np.max(field_dist))
+    for k in idxs:
+        fig, axes = plt.subplots(2, 2, figsize=(9.0, 6.2))
+        ax1, ax2 = axes[0, 0], axes[0, 1]
+        ax3 = axes[1, 0]
+        axes[1, 1].axis("off")
+
+        ax1.plot(times, pe, label=tr("excited_pop"), lw=2)
+        ax1.plot(times, pg, label=tr("ground_pop"), lw=2)
+        ax1.scatter([times[k]], [pe[k]], s=40, zorder=3)
+        ax1.set_xlabel(tr("time"))
+        ax1.set_ylabel("P")
+        ax1.set_xlim(float(times[0]), float(times[-1]))
+        ax1.set_ylim(-0.02, 1.02)
+        ax1.grid(alpha=0.25)
+        ax1.legend(frameon=False, fontsize=8)
+
+        ax2.plot(times, mean_n, label=tr("mean_photons"), lw=2)
+        ax2.scatter([times[k]], [mean_n[k]], s=40, zorder=3)
+        ax2.set_xlabel(tr("time"))
+        ax2.set_ylabel(tr("mean_photons"))
+        ax2.set_xlim(float(times[0]), float(times[-1]))
+        ax2.grid(alpha=0.25)
+
+        ax3.bar(n, field_dist[k], width=0.8)
+        ax3.set_xlabel("n")
+        ax3.set_ylabel("P(n)")
+        ax3.set_ylim(0.0, max(0.05, 1.08 * max_bar))
+        ax3.grid(alpha=0.18, axis="y")
+
+        fig.tight_layout()
+        frames.append(_fig_to_image(fig))
+    return _frames_to_gif_bytes(frames, duration_ms)
+
+
+def make_bloch_gif(times, bx, by, bz, duration_ms=120, max_frames=60):
+    idxs = _sample_indices(len(times), max_frames)
+    u = np.linspace(0.0, 2.0 * np.pi, 40)
+    v = np.linspace(0.0, np.pi, 20)
+    xs = np.outer(np.cos(u), np.sin(v))
+    ys = np.outer(np.sin(u), np.sin(v))
+    zs = np.outer(np.ones_like(u), np.cos(v))
+    th = np.linspace(0.0, 2.0 * np.pi, 240)
+    frames = []
+    for k in idxs:
+        fig = plt.figure(figsize=(6.4, 5.6))
+        ax = fig.add_subplot(111, projection='3d')
+        ax.plot_wireframe(xs, ys, zs, rstride=3, cstride=3, color='0.75', linewidth=0.5, alpha=0.45)
+        ax.plot(np.cos(th), np.sin(th), 0*th, color='0.65', lw=1.0, alpha=0.8)
+        ax.plot(np.cos(th), 0*th, np.sin(th), color='0.65', lw=1.0, alpha=0.8)
+        ax.plot(0*th, np.cos(th), np.sin(th), color='0.65', lw=1.0, alpha=0.8)
+        ax.plot(bx, by, bz, color='0.6', lw=2.0, alpha=0.35)
+        ax.plot(bx[:k+1], by[:k+1], bz[:k+1], color='C0', lw=2.6)
+        ax.scatter([bx[k]], [by[k]], [bz[k]], color='C3', s=38)
+        ax.text(0, 0, 1.08, r'$|e\rangle$', ha='center', va='bottom')
+        ax.text(0, 0, -1.12, r'$|g\rangle$', ha='center', va='top')
+        ax.set_xlim(-1.05, 1.05)
+        ax.set_ylim(-1.05, 1.05)
+        ax.set_zlim(-1.05, 1.05)
+        ax.set_xlabel('x')
+        ax.set_ylabel('y')
+        ax.set_zlabel('z')
+        ax.view_init(elev=24, azim=35)
+        ax.set_box_aspect((1, 1, 1))
+        fig.tight_layout()
+        frames.append(_fig_to_image(fig))
+    return _frames_to_gif_bytes(frames, duration_ms)
+
+
+def add_gif_export_ui(prefix: str, filename: str, maker, *maker_args, n_frames_total: int | None = None):
+    txt = gif_strings()
+    if n_frames_total is None:
+        n_frames_total = 60
+    max_allowed = max(8, int(min(120, n_frames_total)))
+    default_frames = max(8, min(60, max_allowed))
+    with st.expander(txt["title"], expanded=False):
+        st.caption(txt["note"])
+        c1, c2 = st.columns(2)
+        with c1:
+            duration_ms = st.slider(txt["duration"], 40, 400, 120, step=10, key=f"{prefix}_gif_duration")
+        with c2:
+            max_frames = st.slider(txt["max_frames"], 8, max_allowed, default_frames, step=1, key=f"{prefix}_gif_max_frames")
+        if st.button(txt["prepare"], key=f"{prefix}_gif_prepare"):
+            with st.spinner(txt["preparing"]):
+                st.session_state[f"{prefix}_gif_bytes"] = maker(*maker_args, duration_ms=duration_ms, max_frames=max_frames)
+        gif_bytes = st.session_state.get(f"{prefix}_gif_bytes")
+        if gif_bytes:
+            st.download_button(txt["download"], data=gif_bytes, file_name=filename, mime="image/gif", key=f"{prefix}_gif_download")
+
+
 def main():
     init_language()
     ensure_defaults()
@@ -1027,12 +1192,14 @@ def main():
             st.plotly_chart(fig2, use_container_width=True)
 
         st.plotly_chart(animated_jc_figure(times, pe, pg, mean_n, field_dist), use_container_width=True)
+        add_gif_export_ui("jc_main", "atom_field_dynamics.gif", make_jc_gif, times, pe, pg, mean_n, field_dist, n_frames_total=len(times))
 
         bloch_text = bloch_copy()
         with st.expander(bloch_text["title"], expanded=False):
             st.markdown(bloch_text["body"])
         bx, by, bz = bloch_vectors(states)
         st.plotly_chart(animated_bloch_sphere(times, bx, by, bz), use_container_width=True)
+        add_gif_export_ui("jc_bloch", "atom_field_bloch.gif", make_bloch_gif, times, bx, by, bz, n_frames_total=len(times))
 
     with tabs[2]:
         with st.expander(tr("help_vacuum"), expanded=False):
@@ -1068,12 +1235,14 @@ def main():
             st.plotly_chart(fig2, use_container_width=True)
 
         st.plotly_chart(animated_jc_figure(times, pe, pg, mean_n, field_dist), use_container_width=True)
+        add_gif_export_ui("vacuum_main", "vacuum_rabi.gif", make_jc_gif, times, pe, pg, mean_n, field_dist, n_frames_total=len(times))
 
         bloch_text = bloch_copy()
         with st.expander(bloch_text["title"], expanded=False):
             st.markdown(bloch_text["body"])
         bx, by, bz = bloch_vectors(states)
         st.plotly_chart(animated_bloch_sphere(times, bx, by, bz), use_container_width=True)
+        add_gif_export_ui("vacuum_bloch", "vacuum_rabi_bloch.gif", make_bloch_gif, times, bx, by, bz, n_frames_total=len(times))
 
     with tabs[3]:
         with st.expander(tr("help_revival"), expanded=False):
@@ -1109,12 +1278,14 @@ def main():
             st.plotly_chart(fig2, use_container_width=True)
 
         st.plotly_chart(animated_marker_figure(times, pe, tr("excited_pop")), use_container_width=True)
+        add_gif_export_ui("revival_main", "collapse_revival.gif", make_marker_gif, times, pe, tr("excited_pop"), n_frames_total=len(times))
 
         bloch_text = bloch_copy()
         with st.expander(bloch_text["title"], expanded=False):
             st.markdown(bloch_text["body"])
         bx, by, bz = bloch_vectors(states)
         st.plotly_chart(animated_bloch_sphere(times, bx, by, bz), use_container_width=True)
+        add_gif_export_ui("revival_bloch", "collapse_revival_bloch.gif", make_bloch_gif, times, bx, by, bz, n_frames_total=len(times))
 
     with tabs[4]:
         with st.expander(tr("help_open"), expanded=False):
@@ -1163,13 +1334,16 @@ def main():
             st.plotly_chart(fig2, use_container_width=True)
 
         st.plotly_chart(animated_jc_figure(times, pe, pg, mean_n, field_dist), use_container_width=True)
+        add_gif_export_ui("open_main", "open_system_dynamics.gif", make_jc_gif, times, pe, pg, mean_n, field_dist, n_frames_total=len(times))
         st.plotly_chart(animated_marker_figure(times, purity, tr("purity")), use_container_width=True)
+        add_gif_export_ui("open_purity", "open_system_purity.gif", make_marker_gif, times, purity, tr("purity"), n_frames_total=len(times))
 
         bloch_text = bloch_copy()
         with st.expander(bloch_text["title"], expanded=False):
             st.markdown(bloch_text["body"])
         bx, by, bz = bloch_vectors_from_rhos(rhos, st.session_state.open_nmax)
         st.plotly_chart(animated_bloch_sphere(times, bx, by, bz), use_container_width=True)
+        add_gif_export_ui("open_bloch", "open_system_bloch.gif", make_bloch_gif, times, bx, by, bz, n_frames_total=len(times))
 
     with tabs[5]:
         with st.expander(tr("help_detuning"), expanded=False):

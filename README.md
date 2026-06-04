@@ -20,3 +20,11 @@ streamlit run app.py
 ## Deploy
 
 This repository is ready to upload to GitHub and deploy on Streamlit Community Cloud with `app.py` as the main entry point.
+
+
+This version includes an additional open-system Lindblad panel with cavity loss, atomic relaxation, and pure dephasing.
+
+
+## GIF export
+
+Animated panels in the app can be exported directly as GIF files. The export is generated from the current numerical data and does not require Chrome or Kaleido.

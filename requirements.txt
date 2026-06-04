@@ -2,3 +2,5 @@ streamlit>=1.37
 numpy>=1.26
 scipy>=1.13
 plotly>=5.22
+matplotlib>=3.8
+Pillow>=10.0
