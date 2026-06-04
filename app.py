@@ -56,7 +56,7 @@ where $g$ is the coupling strength.
         "tab_revival": "Collapse & revival",
         "tab_detuning": "Detuning",
         "help_light": "How to use this panel",
-        "help_light_body": """
+        "help_light_body": r"""
 Choose a quantum state of one cavity mode and inspect its photon-number distribution $P_n$.
 
 - **Fock state:** exactly one photon number is occupied.
@@ -66,7 +66,7 @@ Choose a quantum state of one cavity mode and inspect its photon-number distribu
 The bar chart shows the probability of finding $n$ photons. The metrics below it summarize the mean photon number and the variance.
 """,
         "help_jc": "How to use this panel",
-        "help_jc_body": """
+        "help_jc_body": r"""
 Choose the initial atomic state, the initial photon number, the coupling strength, and the detuning.
 
 What you see:
@@ -77,19 +77,19 @@ What you see:
 On resonance, the excitation swaps most efficiently between the atom and the field.
 """,
         "help_vacuum": "How to use this panel",
-        "help_vacuum_body": """
+        "help_vacuum_body": r"""
 This panel fixes the initial state to $|e,0\rangle$.
 
 Although there is no classical light in the cavity, the atom and the quantized field still exchange excitation coherently. That is the basic vacuum Rabi effect in this minimal model.
 """,
         "help_revival": "How to use this panel",
-        "help_revival_body": """
+        "help_revival_body": r"""
 The atom starts excited and the field starts in a coherent state.
 
 Because a coherent state contains many photon numbers at once, several nearby Rabi frequencies participate in the dynamics. At first they dephase, which produces a collapse of the oscillations. Later they rephase, which produces a revival.
 
-- **Top:** atomic excitation probability.
-- **Bottom:** mean photon number.
+- **Left:** atomic excitation probability.
+- **Right:** mean photon number.
 - **Animation:** the marker shows the current time during the evolution.
 """,
         "help_detuning": "How to use this panel",
@@ -182,7 +182,7 @@ kde $g$ je síla vazby.
         "tab_revival": "Kolaps a revival",
         "tab_detuning": "Detuning",
         "help_light": "Jak tento panel používat",
-        "help_light_body": """
+        "help_light_body": r"""
 Vyber kvantový stav jednoho módu dutiny a prohlédni si rozdělení pravděpodobnosti $P_n$ pro počet fotonů.
 
 - **Fockův stav:** obsazen je právě jeden počet fotonů.
@@ -192,7 +192,7 @@ Vyber kvantový stav jednoho módu dutiny a prohlédni si rozdělení pravděpod
 Sloupcový graf ukazuje pravděpodobnost výskytu $n$ fotonů. Pod ním jsou shrnuty střední hodnota a variance.
 """,
         "help_jc": "Jak tento panel používat",
-        "help_jc_body": """
+        "help_jc_body": r"""
 Zvol počáteční stav atomu, počáteční počet fotonů, sílu vazby a detuning.
 
 Co je zobrazeno:
@@ -203,19 +203,19 @@ Co je zobrazeno:
 Na rezonanci se excitace mezi atomem a polem přelévá nejúčinněji.
 """,
         "help_vacuum": "Jak tento panel používat",
-        "help_vacuum_body": """
+        "help_vacuum_body": r"""
 Tento panel fixuje počáteční stav na $|e,0\rangle$.
 
 I když v dutině není žádné klasické světlo, atom a kvantované pole si stále koherentně vyměňují excitaci. To je základní vakuový Rabiho jev v tomto minimálním modelu.
 """,
         "help_revival": "Jak tento panel používat",
-        "help_revival_body": """
+        "help_revival_body": r"""
 Atom začíná v excitovaném stavu a pole v koherentním stavu.
 
 Protože koherentní stav obsahuje současně více počtů fotonů, účastní se dynamiky více blízkých Rabiho frekvencí. Nejprve se rozfázují, což vede ke kolapsu oscilací. Později se znovu složí a objeví se revival.
 
-- **Nahoře:** pravděpodobnost excitovaného stavu atomu.
-- **Dole:** střední počet fotonů.
+- **Vlevo:** pravděpodobnost excitovaného stavu atomu.
+- **Vpravo:** střední počet fotonů.
 - **Animace:** bod ukazuje aktuální čas v průběhu vývoje.
 """,
         "help_detuning": "Jak tento panel používat",
